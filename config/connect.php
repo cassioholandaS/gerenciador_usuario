@@ -33,7 +33,7 @@ class connect
 
         $connections = [[
             'host' => $host !== false ? $host : ($local['host'] ?? 'localhost'),
-            'database' => $database !== false ? $database : ($local['database'] ?? $local['banco'] ?? 'salaberga_users'),
+            'database' => $database !== false ? $database : ($local['database'] ?? $local['banco'] ?? 'u750204740_users'),
             'user' => $user !== false ? $user : ($local['user'] ?? 'root'),
             'password' => $password !== false ? $password : ($local['password'] ?? $local['senha'] ?? ''),
         ]];

@@ -8,6 +8,26 @@ require_once(__DIR__ . "/../models/model.select.php");
 $select = new select();
 $usuarios = $select->listar_usuarios();
 $setores = $select->listar_setores();
+$statusCadastro = '';
+foreach (['criado', 'editado', 'excluido', 'ja_existe', 'erro', 'falha', 'tipo_criado', 'tipo_ja_existe', 'tipo_erro', 'tipo_falha'] as $status) {
+    if (isset($_GET[$status])) {
+        $statusCadastro = $status;
+        break;
+    }
+}
+$mensagensCadastro = [
+    'criado' => ['Usuário cadastrado com sucesso.', true],
+    'editado' => ['Usuário atualizado com sucesso.', true],
+    'excluido' => ['Usuário excluído com sucesso.', true],
+    'ja_existe' => ['Já existe um usuário com esse e-mail ou CPF.', false],
+    'erro' => ['Não foi possível salvar: confira os dados informados.', false],
+    'falha' => ['O cadastro não foi concluído. Verifique os dados e a conexão com o banco.', false],
+    'tipo_criado' => ['Tipo de usuário cadastrado com sucesso.', true],
+    'tipo_ja_existe' => ['Esse tipo de usuário já está cadastrado.', false],
+    'tipo_erro' => ['Não foi possível cadastrar o tipo de usuário.', false],
+    'tipo_falha' => ['O cadastro do tipo de usuário não foi concluído.', false],
+];
+$mensagemCadastro = $mensagensCadastro[$statusCadastro] ?? null;
 
 $userName = isset($_SESSION['nome']) ? $_SESSION['nome'] : 'Usuário';
 $userSetor = isset($_SESSION['setor']) ? $_SESSION['setor'] : 'Sistema de Gestão';
@@ -480,6 +500,11 @@ $fotoPerfil = isset($_SESSION['foto_perfil']) ? $_SESSION['foto_perfil'] : '';
         <!-- Main Content -->
         <main class="px-2 sm:px-4 py-4 sm:py-8">
             <div class="max-w-full mx-auto">
+                <?php if ($mensagemCadastro !== null): ?>
+                    <div class="max-w-7xl mx-auto mb-6 rounded-xl border px-5 py-4 font-medium <?php echo $mensagemCadastro[1] ? 'border-green-200 bg-green-50 text-green-800' : 'border-red-200 bg-red-50 text-red-800'; ?>" role="<?php echo $mensagemCadastro[1] ? 'status' : 'alert'; ?>">
+                        <?php echo htmlspecialchars($mensagemCadastro[0], ENT_QUOTES, 'UTF-8'); ?>
+                    </div>
+                <?php endif; ?>
                 <!-- Action Buttons -->
                 <div class="flex flex-col sm:flex-row flex-wrap justify-center gap-3 sm:gap-6 mb-8 sm:mb-12 animate-slide-up">
                     <button onclick="openUserForm()" class="bg-gradient-to-r from-primary to-dark hover:from-primary/90 hover:to-dark/90 text-white px-6 py-3 rounded-xl font-semibold flex items-center justify-center sm:justify-start gap-2 sm:gap-3 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
@@ -634,6 +659,13 @@ $fotoPerfil = isset($_SESSION['foto_perfil']) ? $_SESSION['foto_perfil'] : '';
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-dark mb-3 flex items-center gap-2">
+                                <i class="fa-solid fa-lock text-primary"></i>
+                                Senha *
+                            </label>
+                            <input id="inpSenha" name="senha" type="password" minlength="6" autocomplete="new-password" class="input-enhanced w-full px-4 py-4 rounded-xl transition-all text-base border-2 focus:border-primary focus:ring-4 focus:ring-primary/10" placeholder="Digite a senha" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-dark mb-3 flex items-center gap-2">
                                 <i class="fa-solid fa-id-card text-primary"></i>
                                 CPF *
                             </label>
@@ -745,6 +777,8 @@ $fotoPerfil = isset($_SESSION['foto_perfil']) ? $_SESSION['foto_perfil'] : '';
             document.getElementById('inpUserId').value = '';
             document.getElementById('inpNome').value = '';
             document.getElementById('inpEmail').value = '';
+            document.getElementById('inpSenha').value = '';
+            document.getElementById('inpSenha').required = true;
             document.getElementById('inpCpf').value = '';
             document.getElementById('inpSetor').value = '';
             document.getElementById('userForm').action = '../controllers/controller_usuario.php';
@@ -763,6 +797,8 @@ $fotoPerfil = isset($_SESSION['foto_perfil']) ? $_SESSION['foto_perfil'] : '';
                 document.getElementById('inpUserId').value = user.id || '';
                 document.getElementById('inpNome').value = user.nome || '';
                 document.getElementById('inpEmail').value = user.email || '';
+                document.getElementById('inpSenha').value = '';
+                document.getElementById('inpSenha').required = false;
                 
                 // Aplicar máscara ao CPF se existir
                 if (user.cpf) {
@@ -910,6 +946,19 @@ $fotoPerfil = isset($_SESSION['foto_perfil']) ? $_SESSION['foto_perfil'] : '';
                 if (!this.inpNome.value.trim() || !this.inpEmail.value.trim() || !this.inpCpf.value.trim() || !this.inpSetor.value) {
                     e.preventDefault();
                     showNotification('Preencha todos os campos obrigatórios.', 'error');
+                    return;
+                }
+
+                const senhaInformada = this.inpSenha.value.trim();
+                if (!this.inpUserId.value && !senhaInformada) {
+                    e.preventDefault();
+                    showNotification('Para criar um usuário, informe uma senha.', 'error');
+                    return;
+                }
+
+                if (senhaInformada && senhaInformada.length < 6) {
+                    e.preventDefault();
+                    showNotification('A senha deve ter pelo menos 6 caracteres.', 'error');
                     return;
                 }
                 
