@@ -231,12 +231,48 @@ class admin extends connect
 
     // ==================== FUNÇÕES PARA USUÁRIOS ====================
 
+    private function normalizarCpf($cpf)
+    {
+        $cpf = preg_replace('/\D+/', '', (string) $cpf);
+
+        if (strlen($cpf) !== 11) {
+            return '';
+        }
+
+        return preg_replace('/^(\d{3})(\d{3})(\d{3})(\d{2})$/', '$1.$2.$3-$4', $cpf);
+    }
+
     /**
      * Criar novo usuário
      */
-    public function criar_usuario($nome, $email, $cpf, $id_setor)
+    public function criar_usuario($nome, $email, $cpf, $id_setor, $senha = null)
     {
         try {
+            $nome = trim((string) $nome);
+            $email = trim((string) $email);
+            $cpf = $this->normalizarCpf($cpf);
+            $senha = trim((string) ($senha ?? ''));
+            $id_setor = filter_var($id_setor, FILTER_VALIDATE_INT);
+
+            if (
+                $nome === ''
+                || filter_var($email, FILTER_VALIDATE_EMAIL) === false
+                || $cpf === ''
+                || strlen($senha) < 6
+                || $id_setor === false
+            ) {
+                return 2;
+            }
+
+            $stmt_check = $this->connect->prepare("SELECT id FROM {$this->table2} WHERE id = :id");
+            $stmt_check->bindValue(":id", $id_setor, PDO::PARAM_INT);
+            $stmt_check->execute();
+            if (!$stmt_check->fetch(PDO::FETCH_ASSOC)) {
+                return 2;
+            }
+
+            $senhaHash = password_hash($senha, PASSWORD_DEFAULT);
+
             // Verificar se o email já existe
             $stmt_check = $this->connect->prepare("SELECT id FROM {$this->table1} WHERE email = :email");
             $stmt_check->bindValue(":email", $email);
@@ -255,10 +291,11 @@ class admin extends connect
                 return 3;
             }
 
-            $stmt = $this->connect->prepare("INSERT INTO {$this->table1} (nome, email, cpf, id_setor) VALUES (:nome, :email, :cpf, :id_setor)");
+            $stmt = $this->connect->prepare("INSERT INTO {$this->table1} (nome, email, cpf, senha, id_setor) VALUES (:nome, :email, :cpf, :senha, :id_setor)");
             $stmt->bindValue(":nome", $nome);
             $stmt->bindValue(":email", $email);
             $stmt->bindValue(":cpf", $cpf);
+            $stmt->bindValue(":senha", $senhaHash);
             $stmt->bindValue(":id_setor", $id_setor);
 
             if ($stmt->execute()) {
@@ -275,9 +312,18 @@ class admin extends connect
     /**
      * Editar usuário existente
      */
-    public function editar_usuario($id, $nome, $email, $cpf, $id_setor)
+    public function editar_usuario($id, $nome, $email, $cpf, $id_setor, $senha = null)
     {
         try {
+            $nome = trim((string) $nome);
+            $email = trim((string) $email);
+            $cpf = $this->normalizarCpf($cpf);
+            $senha = $senha !== null ? trim((string) $senha) : null;
+
+            if ($cpf === '') {
+                return 2;
+            }
+
             // Verificar se o email já existe em outro usuário
             if (isset($email)) {
                 $stmt_check = $this->connect->prepare("SELECT id FROM {$this->table1} WHERE email = :email AND id != :id");
@@ -302,13 +348,25 @@ class admin extends connect
                 }
             }
 
-            $sql = "UPDATE {$this->table1} SET nome = :nome, email = :email, cpf = :cpf, id_setor = :id_setor WHERE id = :id";
-            $stmt_check = $this->connect->prepare($sql);
-            $stmt_check->bindValue(":id", $id);
-            $stmt_check->bindValue(":nome", $nome);
-            $stmt_check->bindValue(":cpf", $cpf);
-            $stmt_check->bindValue(":email", $email);
-            $stmt_check->bindValue(":id_setor", $id_setor);
+            if ($senha !== null && $senha !== '') {
+                $senhaHash = password_hash($senha, PASSWORD_DEFAULT);
+                $sql = "UPDATE {$this->table1} SET nome = :nome, email = :email, cpf = :cpf, senha = :senha, id_setor = :id_setor WHERE id = :id";
+                $stmt_check = $this->connect->prepare($sql);
+                $stmt_check->bindValue(":id", $id);
+                $stmt_check->bindValue(":nome", $nome);
+                $stmt_check->bindValue(":cpf", $cpf);
+                $stmt_check->bindValue(":email", $email);
+                $stmt_check->bindValue(":senha", $senhaHash);
+                $stmt_check->bindValue(":id_setor", $id_setor);
+            } else {
+                $sql = "UPDATE {$this->table1} SET nome = :nome, email = :email, cpf = :cpf, id_setor = :id_setor WHERE id = :id";
+                $stmt_check = $this->connect->prepare($sql);
+                $stmt_check->bindValue(":id", $id);
+                $stmt_check->bindValue(":nome", $nome);
+                $stmt_check->bindValue(":cpf", $cpf);
+                $stmt_check->bindValue(":email", $email);
+                $stmt_check->bindValue(":id_setor", $id_setor);
+            }
 
             if ($stmt_check->execute()) {
                 return 1;

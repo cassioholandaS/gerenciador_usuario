@@ -39,9 +39,20 @@ class connect
             ? getenv('DB_PASSWORD')
             : ($hosted['password'] ?? $hosted['senha'] ?? '');
 
-        if ($hosted['host'] === '' || $hosted['database'] === '' || $hosted['user'] === '') {
-            error_log('Configuração de hospedagem do banco do Gerenciador de Usuários ausente ou incompleta.');
-            throw new RuntimeException('Configure DB_HOST, DB_NAME e DB_USER ou hospedagem.salaberga_users.');
+        $connections = [[
+            'host' => $host !== false ? $host : ($local['host'] ?? 'localhost'),
+            'database' => $database !== false ? $database : ($local['database'] ?? $local['banco'] ?? 'u750204740_users'),
+            'user' => $user !== false ? $user : ($local['user'] ?? 'root'),
+            'password' => $password !== false ? $password : ($local['password'] ?? $local['senha'] ?? ''),
+        ]];
+
+        if (isset($config['hospedagem']['salaberga_users'])) {
+            $connections[] = [
+                'host' => $config['hospedagem']['salaberga_users']['host'],
+                'database' => $config['hospedagem']['salaberga_users']['banco'],
+                'user' => $config['hospedagem']['salaberga_users']['user'],
+                'password' => $config['hospedagem']['salaberga_users']['senha'],
+            ];
         }
 
         try {

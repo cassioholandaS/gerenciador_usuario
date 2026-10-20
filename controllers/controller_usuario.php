@@ -1,33 +1,32 @@
 <?php
 require_once(__DIR__ . "/../models/model.admin.php");
-print_r($_POST);
 
 if (
-    isset($_POST["nome"]) && !empty($_POST["nome"])
-    && !isset($_POST["cpf"]) && empty($_POST["cpf"])
+    isset($_POST["nome"]) && !empty(trim($_POST["nome"]))
+    && (!isset($_POST["cpf"]) || empty(trim((string)$_POST["cpf"])))
 ) {
-    $nome = $_POST["nome"];
+    $nome = trim($_POST["nome"]);
 
     $admin_model = new admin();
     $result = $admin_model->criar_tipo_usuario($nome);
 
     switch ($result) {
         case 1:
-            header('Location: ../views/usuario.php?criado');
+            header('Location: ../views/usuario.php?tipo_criado');
             exit();
         case 2:
-            header('Location: ../views/usuario.php?erro');
+            header('Location: ../views/usuario.php?tipo_erro');
             exit();
         case 3:
-            header('Location: ../views/usuario.php?ja_existe');
+            header('Location: ../views/usuario.php?tipo_ja_existe');
             exit();
         default:
-            header('Location: ../views/usuario.php?falha');
+            header('Location: ../views/usuario.php?tipo_falha');
             exit();
     }
 } else if (
     isset($_POST["user_id"]) && !empty($_POST["user_id"])
-    && !isset($_POST["cpf"]) && empty($_POST["cpf"])
+    && (!isset($_POST["cpf"]) || empty(trim((string)$_POST["cpf"])))
 ) {
     $id_usuario = $_POST["user_id"];
 
@@ -50,18 +49,20 @@ if (
     }
 } else if (
     empty($_POST["user_id"]) &&
-    isset($_POST["nome"]) && !empty($_POST["nome"]) &&
-    isset($_POST["email"]) && !empty($_POST["email"]) &&
-    isset($_POST["cpf"]) && !empty($_POST["cpf"]) &&
-    isset($_POST["setor"]) && !empty($_POST["setor"])
+    isset($_POST["nome"]) && !empty(trim($_POST["nome"])) &&
+    isset($_POST["email"]) && !empty(trim($_POST["email"])) &&
+    isset($_POST["cpf"]) && !empty(trim((string)$_POST["cpf"])) &&
+    isset($_POST["setor"]) && !empty($_POST["setor"]) &&
+    isset($_POST["senha"]) && !empty($_POST["senha"])
 ) {
-    $nome = $_POST["nome"];
-    $email = $_POST["email"];
-    $cpf = $_POST["cpf"];
+    $nome = trim($_POST["nome"]);
+    $email = trim($_POST["email"]);
+    $cpf = trim((string)$_POST["cpf"]);
     $id_setor = $_POST["setor"];
+    $senha = (string)$_POST["senha"];
 
     $admin_model = new admin();
-    $result = $admin_model->criar_usuario($nome, $email, $cpf, $id_setor);
+    $result = $admin_model->criar_usuario($nome, $email, $cpf, $id_setor, $senha);
 
     switch ($result) {
         case 1:
@@ -79,19 +80,20 @@ if (
     }
 } else if (
     isset($_POST["user_id"]) && !empty($_POST["user_id"]) &&
-    isset($_POST["nome"]) && !empty($_POST["nome"]) &&
-    isset($_POST["email"]) && !empty($_POST["email"]) &&
-    isset($_POST["cpf"]) && !empty($_POST["cpf"]) &&
+    isset($_POST["nome"]) && !empty(trim($_POST["nome"])) &&
+    isset($_POST["email"]) && !empty(trim($_POST["email"])) &&
+    isset($_POST["cpf"]) && !empty(trim((string)$_POST["cpf"])) &&
     isset($_POST["setor"]) && !empty($_POST["setor"])
 ) {
     $id_usuario = $_POST["user_id"];
-    $nome = $_POST["nome"];
-    $email = $_POST["email"];
-    $cpf = $_POST["cpf"];
+    $nome = trim($_POST["nome"]);
+    $email = trim($_POST["email"]);
+    $cpf = trim((string)$_POST["cpf"]);
     $id_setor = $_POST["setor"];
+    $senha = isset($_POST["senha"]) ? (string)$_POST["senha"] : null;
 
     $admin_model = new admin();
-    $result = $admin_model->editar_usuario($id_usuario, $nome, $email, $cpf, $id_setor);
+    $result = $admin_model->editar_usuario($id_usuario, $nome, $email, $cpf, $id_setor, $senha);
 
     switch ($result) {
         case 1:
@@ -107,7 +109,7 @@ if (
             header('Location: ../views/usuario.php?falha');
             exit();
     }
-} /*else {
-    header('Location: ../index.php');
+} else {
+    header('Location: ../views/usuario.php?falha');
     exit();
-}*/
+}
