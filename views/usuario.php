@@ -14,6 +14,9 @@ $userSetor = isset($_SESSION['setor']) ? $_SESSION['setor'] : 'Sistema de Gestã
 $userEmail = isset($_SESSION['email']) ? $_SESSION['email'] : '';
 $userInitial = function_exists('mb_substr') ? mb_strtoupper(mb_substr($userName, 0, 1, 'UTF-8'), 'UTF-8') : strtoupper(substr($userName, 0, 1));
 $fotoPerfil = isset($_SESSION['foto_perfil']) ? $_SESSION['foto_perfil'] : '';
+if (empty($_SESSION['notification_csrf_token'])) {
+    $_SESSION['notification_csrf_token'] = bin2hex(random_bytes(32));
+}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -503,9 +506,24 @@ $fotoPerfil = isset($_SESSION['foto_perfil']) ? $_SESSION['foto_perfil'] : '';
                     <!-- Table Header -->
                     <div class="p-4 sm:p-6 lg:p-8 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-6 border-b border-gray-200/50">
                         <div class="flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-3 sm:gap-4 w-full lg:w-auto">
-                            <div class="relative w-full sm:w-auto">
-                                <i class="fa-solid fa-magnifying-glass absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm sm:text-base"></i>
-                                <input id="tableSearch" type="text" class="input-enhanced pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-medium w-full sm:w-64 lg:w-80 text-sm sm:text-base" placeholder="Buscar por nome, e-mail...">
+                            <div class="flex items-center gap-3 w-full sm:w-auto">
+                                <div class="relative flex-1 sm:flex-none">
+                                    <i class="fa-solid fa-magnifying-glass absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm sm:text-base"></i>
+                                    <input id="tableSearch" type="text" class="input-enhanced pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-medium w-full sm:w-64 lg:w-80 text-sm sm:text-base" placeholder="Buscar por nome, e-mail...">
+                                </div>
+                                <button
+                                    id="firstAccessNotificationsButton"
+                                    type="button"
+                                    onclick="openFirstAccessNotifications()"
+                                    class="relative flex-shrink-0 w-12 h-12 rounded-xl border-2 border-gray-200 bg-white text-gray-600 hover:text-primary hover:border-primary transition-all shadow-sm"
+                                    aria-label="Abrir solicitações de primeiro acesso"
+                                    aria-haspopup="dialog"
+                                    aria-controls="modalFirstAccessNotifications"
+                                    aria-expanded="false"
+                                >
+                                    <i class="fa-solid fa-bell text-lg" aria-hidden="true"></i>
+                                    <span id="firstAccessNotificationBadge" class="hidden absolute -top-2 -right-2 min-w-5 h-5 px-1 rounded-full bg-red-500 text-white text-xs font-bold items-center justify-center border-2 border-white" aria-live="polite"></span>
+                                </button>
                             </div>
                         </div>
 
@@ -735,9 +753,207 @@ $fotoPerfil = isset($_SESSION['foto_perfil']) ? $_SESSION['foto_perfil'] : '';
         </div>
     </div>
 
+    <!-- Modal de solicitações de primeiro acesso -->
+    <div id="modalFirstAccessNotifications" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-6 z-50" role="dialog" aria-modal="true" aria-labelledby="firstAccessNotificationsTitle" onclick="if (event.target === this) closeFirstAccessNotifications()">
+        <div id="modalFirstAccessNotificationsContent" class="bg-white w-full max-w-2xl rounded-2xl shadow-2xl max-h-[85vh] flex flex-col transform transition-all duration-300 scale-95 opacity-0">
+            <div class="p-5 sm:p-6 border-b border-gray-100 flex items-start justify-between gap-4">
+                <div>
+                    <h2 id="firstAccessNotificationsTitle" class="text-xl sm:text-2xl font-bold text-dark font-heading">Solicitações de primeiro acesso</h2>
+                    <p id="firstAccessNotificationsSummary" class="text-sm text-gray-500 mt-1">Carregando solicitações...</p>
+                </div>
+                <button type="button" class="p-2 rounded-xl hover:bg-gray-100 text-gray-500" aria-label="Fechar notificações" onclick="closeFirstAccessNotifications()">
+                    <i class="fa-solid fa-xmark text-lg" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div id="firstAccessNotificationsList" class="p-4 sm:p-6 overflow-y-auto space-y-3" aria-live="polite">
+                <p class="text-sm text-gray-500 text-center py-8">Carregando solicitações...</p>
+            </div>
+        </div>
+    </div>
+
     <script>
         const usuarios = <?php echo json_encode($usuarios); ?>;
 
+        let firstAccessNotificationsOpen = false;
+
+        function updateFirstAccessNotificationBadge(count) {
+            const badge = document.getElementById('firstAccessNotificationBadge');
+            const button = document.getElementById('firstAccessNotificationsButton');
+            const safeCount = Number.isFinite(Number(count)) ? Math.max(0, Number(count)) : 0;
+
+            if (safeCount === 0) {
+                badge.textContent = '';
+                badge.classList.add('hidden');
+                badge.classList.remove('flex');
+                button.setAttribute('aria-label', 'Abrir solicitações de primeiro acesso');
+                return;
+            }
+
+            badge.textContent = safeCount > 9 ? '9+' : String(safeCount);
+            badge.classList.remove('hidden');
+            badge.classList.add('flex');
+            button.setAttribute(
+                'aria-label',
+                safeCount === 1 ? '1 solicitação de primeiro acesso' : `${safeCount} solicitações de primeiro acesso`
+            );
+        }
+
+        function renderFirstAccessNotifications(requests, total) {
+            const list = document.getElementById('firstAccessNotificationsList');
+            const summary = document.getElementById('firstAccessNotificationsSummary');
+            list.replaceChildren();
+
+            if (total === 0) {
+                summary.textContent = 'Nenhuma solicitação pendente.';
+                const emptyState = document.createElement('p');
+                emptyState.className = 'text-sm text-gray-500 text-center py-8';
+                emptyState.textContent = 'Quando alguém solicitar o primeiro acesso, a solicitação aparecerá aqui.';
+                list.appendChild(emptyState);
+                return;
+            }
+
+            summary.textContent = `${total} ${total === 1 ? 'solicitação pendente' : 'solicitações pendentes'}.`;
+            requests.forEach(request => {
+                const card = document.createElement('article');
+                card.className = 'rounded-xl border border-gray-200 bg-gray-50 p-4';
+
+                const heading = document.createElement('div');
+                heading.className = 'flex items-start justify-between gap-3';
+                const name = document.createElement('h3');
+                name.className = 'font-semibold text-dark';
+                name.textContent = request.nome || 'Nome não informado';
+                const badge = document.createElement('span');
+                badge.className = 'flex-shrink-0 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800';
+                badge.textContent = 'Pendente';
+                heading.append(name, badge);
+                card.appendChild(heading);
+
+                const details = document.createElement('dl');
+                details.className = 'mt-3 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-sm';
+                [
+                    ['E-mail', request.email],
+                    ['CPF', request.cpf],
+                    ['Data da solicitação', request.data_solicitacao]
+                ].forEach(([label, value]) => {
+                    if (!value) return;
+                    const item = document.createElement('div');
+                    const term = document.createElement('dt');
+                    term.className = 'text-xs font-medium uppercase tracking-wide text-gray-500';
+                    term.textContent = label;
+                    const description = document.createElement('dd');
+                    description.className = 'mt-0.5 break-words text-gray-700';
+                    description.textContent = value;
+                    item.append(term, description);
+                    details.appendChild(item);
+                });
+                card.appendChild(details);
+
+                const actions = document.createElement('div');
+                actions.className = 'mt-4 flex justify-end gap-2';
+                [
+                    ['recusar', 'Recusar', 'border-red-200 text-red-600 hover:bg-red-50'],
+                    ['aprovar', 'Aprovar primeiro acesso', 'border-primary bg-primary text-white hover:bg-dark']
+                ].forEach(([decision, label, classes]) => {
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.className = `rounded-lg border px-3 py-2 text-sm font-semibold transition-colors ${classes}`;
+                    button.textContent = label;
+                    button.addEventListener('click', () => decideFirstAccessRequest(request.id, decision, button));
+                    actions.appendChild(button);
+                });
+                card.appendChild(actions);
+                list.appendChild(card);
+            });
+
+            if (total > requests.length) {
+                const limitNotice = document.createElement('p');
+                limitNotice.className = 'text-center text-xs text-gray-500 py-2';
+                limitNotice.textContent = `Exibindo as ${requests.length} solicitações pendentes mais antigas.`;
+                list.appendChild(limitNotice);
+            }
+        }
+
+        let firstAccessCsrfToken = '';
+
+        async function refreshFirstAccessNotifications(loadRequests = false) {
+            const endpoint = `../controllers/controller_notificacoes.php${loadRequests ? '?detalhes=1' : ''}`;
+            const response = await fetch(endpoint, {
+                headers: { 'Accept': 'application/json' },
+                credentials: 'same-origin',
+                cache: 'no-store'
+            });
+            const result = await response.json();
+            if (!response.ok || !result.sucesso) {
+                throw new Error(result.erro || 'Não foi possível carregar as notificações.');
+            }
+
+            updateFirstAccessNotificationBadge(result.quantidade);
+            if (loadRequests) {
+                firstAccessCsrfToken = result.csrf_token || '';
+                renderFirstAccessNotifications(result.solicitacoes || [], Number(result.quantidade) || 0);
+            }
+        }
+
+        async function decideFirstAccessRequest(requestId, decision, button) {
+            button.disabled = true;
+            const originalText = button.textContent;
+            button.textContent = 'Processando...';
+
+            try {
+                const response = await fetch('../controllers/controller_notificacoes.php', {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'same-origin',
+                    cache: 'no-store',
+                    body: JSON.stringify({
+                        id: requestId,
+                        decisao: decision,
+                        csrf_token: firstAccessCsrfToken
+                    })
+                });
+                const result = await response.json();
+                if (!response.ok || !result.sucesso) {
+                    throw new Error(result.erro || 'Não foi possível atualizar a solicitação.');
+                }
+
+                showNotification(result.mensagem, decision === 'aprovar' ? 'success' : 'info');
+                await refreshFirstAccessNotifications(true);
+            } catch (error) {
+                showNotification(error.message, 'error');
+                button.disabled = false;
+                button.textContent = originalText;
+            }
+        }
+
+        async function openFirstAccessNotifications() {
+            firstAccessNotificationsOpen = true;
+            document.getElementById('firstAccessNotificationsButton').setAttribute('aria-expanded', 'true');
+            openModal('modalFirstAccessNotifications');
+            const list = document.getElementById('firstAccessNotificationsList');
+            const summary = document.getElementById('firstAccessNotificationsSummary');
+            list.innerHTML = '<p class="text-sm text-gray-500 text-center py-8">Carregando solicitações...</p>';
+            summary.textContent = 'Carregando solicitações...';
+
+            try {
+                await refreshFirstAccessNotifications(true);
+            } catch (error) {
+                summary.textContent = 'Não foi possível carregar as solicitações.';
+                list.replaceChildren();
+                const errorMessage = document.createElement('p');
+                errorMessage.className = 'text-sm text-red-600 text-center py-8';
+                errorMessage.textContent = error.message;
+                list.appendChild(errorMessage);
+            }
+        }
+
+        function closeFirstAccessNotifications() {
+            firstAccessNotificationsOpen = false;
+            document.getElementById('firstAccessNotificationsButton').setAttribute('aria-expanded', 'false');
+            closeModal('modalFirstAccessNotifications');
+        }
 
 
         function openUserForm() {
@@ -974,11 +1190,31 @@ $fotoPerfil = isset($_SESSION['foto_perfil']) ? $_SESSION['foto_perfil'] : '';
                     const openModals = document.querySelectorAll('[id^="modal"]:not(.hidden)');
                     openModals.forEach(modal => {
                         if (!modal.classList.contains('hidden')) {
-                            closeModal(modal.id);
+                            if (modal.id === 'modalFirstAccessNotifications') {
+                                closeFirstAccessNotifications();
+                            } else {
+                                closeModal(modal.id);
+                            }
                         }
                     });
                 }
             });
+
+            document.getElementById('modalFirstAccessNotifications').addEventListener('transitionend', function() {
+                if (this.classList.contains('hidden')) {
+                    firstAccessNotificationsOpen = false;
+                    document.getElementById('firstAccessNotificationsButton').setAttribute('aria-expanded', 'false');
+                }
+            });
+
+            refreshFirstAccessNotifications().catch(error => {
+                console.error('Erro ao atualizar notificações de primeiro acesso:', error);
+            });
+            window.setInterval(() => {
+                refreshFirstAccessNotifications(firstAccessNotificationsOpen).catch(error => {
+                    console.error('Erro ao atualizar notificações de primeiro acesso:', error);
+                });
+            }, 30000);
 
             document.querySelectorAll('.table-row').forEach(row => {
                 row.addEventListener('mouseenter', function() {

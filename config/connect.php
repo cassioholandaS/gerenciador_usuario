@@ -19,53 +19,45 @@ class connect
 
     function connect_database()
     {
-        $configPath = __DIR__ . '/../../../../.env/config.php';
+        date_default_timezone_set('America/Sao_Paulo');
+
+        $configPath = dirname(__DIR__, 4) . DIRECTORY_SEPARATOR . '.env' . DIRECTORY_SEPARATOR . 'config.php';
         $config = is_file($configPath) ? require $configPath : [];
-        $local = $config['local'] ?? [];
-        if (isset($local['salaberga_users'])) {
-            $local = $local['salaberga_users'];
+
+        $hosted = $config['hospedagem']['salaberga_users']
+            ?? $config['host']['salaberga_users']
+            ?? $config['host']
+            ?? [];
+        if (!is_array($hosted)) {
+            $hosted = [];
         }
 
-        $host = getenv('STGM_DB_HOST');
-        $database = getenv('STGM_DB_DATABASE');
-        $user = getenv('STGM_DB_USER');
-        $password = getenv('STGM_DB_PASSWORD');
+        $hosted['host'] = getenv('DB_HOST') ?: ($hosted['host'] ?? '');
+        $hosted['database'] = getenv('DB_NAME') ?: ($hosted['database'] ?? $hosted['banco'] ?? '');
+        $hosted['user'] = getenv('DB_USER') ?: ($hosted['user'] ?? '');
+        $hosted['password'] = getenv('DB_PASSWORD') !== false
+            ? getenv('DB_PASSWORD')
+            : ($hosted['password'] ?? $hosted['senha'] ?? '');
 
-        $connections = [[
-            'host' => $host !== false ? $host : ($local['host'] ?? 'localhost'),
-            'database' => $database !== false ? $database : ($local['database'] ?? $local['banco'] ?? 'salaberga_users'),
-            'user' => $user !== false ? $user : ($local['user'] ?? 'root'),
-            'password' => $password !== false ? $password : ($local['password'] ?? $local['senha'] ?? ''),
-        ]];
-
-        if (isset($config['hospedagem']['salaberga_users'])) {
-            $connections[] = [
-                'host' => $config['hospedagem']['salaberga_users']['host'],
-                'database' => $config['hospedagem']['salaberga_users']['banco'],
-                'user' => $config['hospedagem']['salaberga_users']['user'],
-                'password' => $config['hospedagem']['salaberga_users']['senha'],
-            ];
+        if ($hosted['host'] === '' || $hosted['database'] === '' || $hosted['user'] === '') {
+            error_log('Configuração de hospedagem do banco do Gerenciador de Usuários ausente ou incompleta.');
+            throw new RuntimeException('Configure DB_HOST, DB_NAME e DB_USER ou hospedagem.salaberga_users.');
         }
 
-        $lastError = null;
-        foreach ($connections as $credentials) {
-            try {
-                $this->connect = new PDO(
-                    'mysql:host=' . $credentials['host'] . ';dbname=' . $credentials['database'] . ';charset=utf8mb4',
-                    $credentials['user'],
-                    $credentials['password'],
-                    [
-                        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                    ]
-                );
-                return;
-            } catch (PDOException $e) {
-                $lastError = $e;
-            }
+        try {
+            $this->connect = new PDO(
+                'mysql:host=' . $hosted['host'] . ';dbname=' . $hosted['database'] . ';charset=utf8mb4',
+                $hosted['user'],
+                $hosted['password'],
+                [
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                    PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4, time_zone = '-03:00'",
+                ]
+            );
+        } catch (PDOException $e) {
+            error_log('Erro de conexão com o banco do Gerenciador de Usuários: ' . $e->getMessage());
+            throw new RuntimeException('Não foi possível conectar ao banco de dados do Gerenciador de Usuários.', 0, $e);
         }
-
-        error_log('Erro de conexão com banco: ' . $lastError->getMessage());
-        throw new RuntimeException('Não foi possível conectar ao banco de dados local.', 0, $lastError);
     }
 }
