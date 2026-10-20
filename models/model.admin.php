@@ -1,5 +1,5 @@
 <?php
-require_once('sessions.php');
+require_once(__DIR__ . '/sessions.php');
 $session = new sessions();
 $session->autenticar_session();
 $session->tempo_session();
@@ -17,7 +17,20 @@ class admin extends connect
     function __construct()
     {
         parent::__construct();
-        require(__DIR__ . '/../../../../.env/tables.php');
+        $tablesFile = __DIR__ . '/../../../../.env/tables.php';
+        if (is_file($tablesFile)) {
+            require $tablesFile;
+        } else {
+            $table = [
+                'salaberga_users' => [
+                    1 => 'usuarios',
+                    2 => 'setores',
+                    3 => 'tipos_usuarios',
+                    4 => 'permissoes',
+                    5 => 'sistemas',
+                ],
+            ];
+        }
         $this->table1 = $table['salaberga_users'][1];
         $this->table2 = $table['salaberga_users'][2];
         $this->table3 = $table['salaberga_users'][3];

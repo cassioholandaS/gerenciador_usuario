@@ -1,19 +1,9 @@
 <?php
-require_once(__DIR__ . '/../../main/models/sessions.php');
-require_once(__DIR__ . '/../../main/models/model.usuario.php');
-
+require_once(__DIR__ . '/models/sessions.php');
 
 $session = new sessions();
 $session->autenticar_session();
 $session->tempo_session();
-
-$modelUsuario = new model_usuario();
-$dadosUsuario = [];
-try {
-    $dadosUsuario = $modelUsuario->getDadosUsuario((int)($_SESSION['id'] ?? 0));
-} catch (Throwable $e) {
-    $dadosUsuario = [];
-}
 
 $userName = isset($_SESSION['nome']) ? $_SESSION['nome'] : 'Usuário';
 $userSetor = isset($_SESSION['setor']) ? $_SESSION['setor'] : 'Sistema de Gestão';
@@ -515,7 +505,7 @@ $fotoPerfil = isset($_SESSION['foto_perfil']) ? $_SESSION['foto_perfil'] : '';
 
       
         function logout() {
-            window.location.href = '../../main/views/subsystems.php';
+            window.location.href = 'login.php?sair=1';
         }
     </script>
 </body>
