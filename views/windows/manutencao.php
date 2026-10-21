@@ -50,7 +50,7 @@
                         <i class="fa-solid fa-refresh mr-2"></i>
                         Atualizar página
                     </button>
-                    <a href="../../login.php" class="inline-flex items-center justify-center px-5 py-3 rounded-xl font-semibold text-[#005A24] bg-white border border-[#005A24]/30 hover:bg-[#005A24]/5 transition-all">
+                    <a href="../../../../main/views/autenticacao/login.php" class="inline-flex items-center justify-center px-5 py-3 rounded-xl font-semibold text-[#005A24] bg-white border border-[#005A24]/30 hover:bg-[#005A24]/5 transition-all">
                         <i class="fa-solid fa-home mr-2"></i>
                         Voltar ao início
                     </a>
@@ -90,5 +90,4 @@
     </script>
 </body>
 </html>
-
 

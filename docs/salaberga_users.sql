@@ -67,7 +67,8 @@ INSERT INTO `permissoes` (`id`, `id_tipos_usuarios`, `id_sistemas`, `id_usuarios
 (58, 19, 1, 60),
 (59, 22, 17, 61),
 (60, 21, 2, 63),
-(61, 12, 10, 58);
+(61, 12, 10, 58),
+(62, 16, 21, 64);
 
 -- --------------------------------------------------------
 
@@ -221,7 +222,10 @@ INSERT INTO `usuarios` (`id`, `nome`, `email`, `telefone`, `foto_perfil`, `cpf`,
 (60, 'Kauan Cristian Santos de Lima', 'cristian9br@gmail.com', NULL, NULL, '094.289.873-79', '$2y$10$JftKX6MZ8gpWfIPVWeK3lOxhptkCwAb/3B6HR1g3P.B.rVCNjGAbC', 19),
 (61, 'Cássio Holanda Gomes Severiano', 'holandaseveriano@gmail.com', NULL, NULL, '051.787.343-51', '$2y$10$l.tUVkYd4bDdoefLyzc6we6JfH/QmINthDdm8NtQXt05Qfp.ap3lS', 19),
 (62, 'Ester Andrade Almeida', 'ester101122@gmail.com', NULL, NULL, '101.122.343-05', NULL, 19),
-(63, 'Ester', 'ester@gmail.com', NULL, NULL, '555.222.333-66', '$2y$10$VaoxXYzkiJU6rrpjSRBLx.61ZrG/gQUfxUFTsluNkFq56cAG.8w/a', 19);
+(63, 'Ester', 'ester@gmail.com', NULL, NULL, '555.222.333-66', '$2y$10$VaoxXYzkiJU6rrpjSRBLx.61ZrG/gQUfxUFTsluNkFq56cAG.8w/a', 19),
+-- Contas descartáveis para testar o login administrativo e a solicitação de primeiro acesso.
+(64, 'Administrador de teste', 'admin.teste@local.test', NULL, NULL, '000.000.000-00', '$2y$10$18d4bHwXw8NW4pY9ULE8n.7dRqwK7B4djwMCjy7HfhsbxGqgqQfAS', 19),
+(65, 'Solicitante de teste', 'solicitante.teste@local.test', NULL, NULL, '000.000.000-01', NULL, 14);
 
 --
 -- Índices para tabelas despejadas
@@ -263,6 +267,26 @@ ALTER TABLE `usuarios`
   ADD KEY `id_setor` (`id_setor`);
 
 --
+-- Estrutura para tabela `solicitacoes_primeiro_acesso`
+--
+CREATE TABLE `solicitacoes_primeiro_acesso` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `id_usuario` int(11) NOT NULL,
+  `senha_hash` varchar(255) DEFAULT NULL,
+  `status` enum('pendente', 'aprovado', 'recusado') NOT NULL DEFAULT 'pendente',
+  `data_solicitacao` datetime NOT NULL DEFAULT current_timestamp(),
+  `id_aprovador` int(11) DEFAULT NULL,
+  `data_decisao` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_solicitacoes_primeiro_acesso_status_data` (`status`, `data_solicitacao`),
+  KEY `idx_solicitacoes_primeiro_acesso_usuario_status` (`id_usuario`, `status`),
+  CONSTRAINT `fk_solicitacoes_primeiro_acesso_usuario`
+    FOREIGN KEY (`id_usuario`) REFERENCES `usuarios` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_solicitacoes_primeiro_acesso_aprovador`
+    FOREIGN KEY (`id_aprovador`) REFERENCES `usuarios` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
 -- AUTO_INCREMENT para tabelas despejadas
 --
 
@@ -270,7 +294,7 @@ ALTER TABLE `usuarios`
 -- AUTO_INCREMENT de tabela `permissoes`
 --
 ALTER TABLE `permissoes`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=62;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=63;
 
 --
 -- AUTO_INCREMENT de tabela `setores`
@@ -294,7 +318,7 @@ ALTER TABLE `tipos_usuarios`
 -- AUTO_INCREMENT de tabela `usuarios`
 --
 ALTER TABLE `usuarios`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=64;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=66;
 
 --
 -- Restrições para tabelas despejadas

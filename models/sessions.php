@@ -13,7 +13,8 @@ class sessions
             $scriptDirectory = dirname($scriptDirectory);
         }
 
-        return rtrim($scriptDirectory, '/') . '/login.php';
+        $applicationDirectory = dirname(dirname($scriptDirectory));
+        return rtrim($applicationDirectory, '/') . '/main/views/autenticacao/login.php';
     }
 
     function autenticar_session()

@@ -6,7 +6,7 @@ $session->tempo_session();
 
 require_once(__DIR__ . '/../config/connect.php');
 
-class admin extends connect
+class admin extends gerenciar_usuarios_connect
 {
     private string $table1;
     private string $table2;

@@ -7,7 +7,7 @@ class model_solicitacoes_primeiro_acesso
 
     public function __construct()
     {
-        $database = new connect();
+        $database = new gerenciar_usuarios_connect();
         $this->connection = $database->connection();
     }
 

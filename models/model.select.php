@@ -5,7 +5,7 @@ $session->autenticar_session();
 $session->tempo_session();
 
 require_once(__DIR__ . '/../config/connect.php');
-class select extends connect
+class select extends gerenciar_usuarios_connect
 {
     private string $table1;
     private string $table2;

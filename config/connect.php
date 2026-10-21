@@ -1,5 +1,5 @@
 <?php
-class connect
+class gerenciar_usuarios_connect
 {
     protected $connect;
 
@@ -23,52 +23,66 @@ class connect
 
         $configPath = dirname(__DIR__, 4) . DIRECTORY_SEPARATOR . '.env' . DIRECTORY_SEPARATOR . 'config.php';
         $config = is_file($configPath) ? require $configPath : [];
+        if (!is_array($config)) {
+            throw new RuntimeException('A configuração do banco de dados é inválida.');
+        }
 
-        $hosted = $config['hospedagem']['salaberga_users']
-            ?? $config['host']['salaberga_users']
-            ?? $config['host']
-            ?? [];
+        $local = $config['local']['salaberga_users'] ?? [];
+        $hosted = $config['hospedagem']['salaberga_users'] ?? [];
+        if (!is_array($local)) {
+            $local = [];
+        }
         if (!is_array($hosted)) {
             $hosted = [];
         }
 
-        $hosted['host'] = getenv('DB_HOST') ?: ($hosted['host'] ?? '');
-        $hosted['database'] = getenv('DB_NAME') ?: ($hosted['database'] ?? $hosted['banco'] ?? '');
-        $hosted['user'] = getenv('DB_USER') ?: ($hosted['user'] ?? '');
-        $hosted['password'] = getenv('DB_PASSWORD') !== false
-            ? getenv('DB_PASSWORD')
-            : ($hosted['password'] ?? $hosted['senha'] ?? '');
+        $local = [
+            'host' => getenv('DB_HOST') ?: ($local['host'] ?? 'localhost'),
+            'database' => getenv('DB_NAME') ?: ($local['banco'] ?? $local['database'] ?? 'salaberga_users'),
+            'user' => getenv('DB_USER') ?: ($local['user'] ?? 'root'),
+            'password' => getenv('DB_PASSWORD') !== false
+                ? getenv('DB_PASSWORD')
+                : ($local['senha'] ?? $local['password'] ?? ''),
+        ];
 
-        $connections = [[
-            'host' => $host !== false ? $host : ($local['host'] ?? 'localhost'),
-            'database' => $database !== false ? $database : ($local['database'] ?? $local['banco'] ?? 'u750204740_users'),
-            'user' => $user !== false ? $user : ($local['user'] ?? 'root'),
-            'password' => $password !== false ? $password : ($local['password'] ?? $local['senha'] ?? ''),
-        ]];
-
-        if (isset($config['hospedagem']['salaberga_users'])) {
+        $connections = [$local];
+        if ($hosted !== []) {
             $connections[] = [
-                'host' => $config['hospedagem']['salaberga_users']['host'],
-                'database' => $config['hospedagem']['salaberga_users']['banco'],
-                'user' => $config['hospedagem']['salaberga_users']['user'],
-                'password' => $config['hospedagem']['salaberga_users']['senha'],
+                'host' => $hosted['host'] ?? '',
+                'database' => $hosted['banco'] ?? $hosted['database'] ?? '',
+                'user' => $hosted['user'] ?? '',
+                'password' => $hosted['senha'] ?? $hosted['password'] ?? '',
             ];
         }
 
-        try {
-            $this->connect = new PDO(
-                'mysql:host=' . $hosted['host'] . ';dbname=' . $hosted['database'] . ';charset=utf8mb4',
-                $hosted['user'],
-                $hosted['password'],
-                [
-                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                    PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4, time_zone = '-03:00'",
-                ]
-            );
-        } catch (PDOException $e) {
-            error_log('Erro de conexão com o banco do Gerenciador de Usuários: ' . $e->getMessage());
-            throw new RuntimeException('Não foi possível conectar ao banco de dados do Gerenciador de Usuários.', 0, $e);
+        $lastException = null;
+        foreach ($connections as $connection) {
+            if ($connection['host'] === '' || $connection['database'] === '' || $connection['user'] === '') {
+                continue;
+            }
+
+            try {
+                $this->connect = new PDO(
+                    'mysql:host=' . $connection['host'] . ';dbname=' . $connection['database'] . ';charset=utf8mb4',
+                    $connection['user'],
+                    $connection['password'],
+                    [
+                        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                        PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4, time_zone = '-03:00'",
+                    ]
+                );
+                return;
+            } catch (PDOException $e) {
+                $lastException = $e;
+                error_log('Falha ao conectar ao banco do Gerenciador de Usuários: ' . $e->getMessage());
+            }
         }
+
+        throw new RuntimeException(
+            'Não foi possível conectar ao banco de dados do Gerenciador de Usuários.',
+            0,
+            $lastException
+        );
     }
 }

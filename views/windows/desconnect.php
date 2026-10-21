@@ -54,7 +54,7 @@
                         <i class="fa-solid fa-envelope mr-2"></i>
                         Contatar suporte
                     </a>
-                    <a href="../../login.php" class="inline-flex items-center justify-center px-5 py-3 rounded-xl font-semibold text-[#1A3C34] bg-white border border-gray-200 hover:bg-gray-50 transition-all">
+                    <a href="../../../../main/views/autenticacao/login.php" class="inline-flex items-center justify-center px-5 py-3 rounded-xl font-semibold text-[#1A3C34] bg-white border border-gray-200 hover:bg-gray-50 transition-all">
                         <i class="fa-solid fa-home mr-2"></i>
                         Voltar ao início
                     </a>
@@ -90,5 +90,4 @@
     </script>
 </body>
 </html>
-
 

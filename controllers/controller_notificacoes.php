@@ -21,7 +21,7 @@ if (
 }
 
 try {
-    $database = new connect();
+    $database = new gerenciar_usuarios_connect();
     $permissionQuery = $database->connection()->prepare(
         "SELECT 1
          FROM permissoes p

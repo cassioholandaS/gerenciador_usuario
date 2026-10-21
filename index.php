@@ -505,7 +505,7 @@ $fotoPerfil = isset($_SESSION['foto_perfil']) ? $_SESSION['foto_perfil'] : '';
 
       
         function logout() {
-            window.location.href = 'login.php?sair=1';
+            window.location.href = '../../main/views/autenticacao/login.php?sair=true';
         }
     </script>
 </body>
