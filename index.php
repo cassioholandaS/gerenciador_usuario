@@ -23,6 +23,22 @@ $fotoPerfil = isset($_SESSION['foto_perfil']) ? $_SESSION['foto_perfil'] : '';
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="assets/theme.css" rel="stylesheet">
+    <script src="assets/theme.js" defer></script>
+    <script>
+        (function() {
+            const portalUrl = new URL('../../main/views/subsystems.php', window.location.href).href;
+            history.pushState({ gerenciadorUsuarioMenu: true }, '', window.location.href);
+
+            window.addEventListener('popstate', function() {
+                window.location.replace(portalUrl);
+            });
+
+            window.goToSubsystemCatalog = function() {
+                window.location.replace(portalUrl);
+            };
+        })();
+    </script>
     <script>
         tailwind.config = {
             theme: {
@@ -173,6 +189,11 @@ $fotoPerfil = isset($_SESSION['foto_perfil']) ? $_SESSION['foto_perfil'] : '';
             color: #005A24 !important;
         }
 
+        html.dark .manager-menu-card:hover .text-primary,
+        html.dark .manager-menu-card:hover .text-primary * {
+            color: #00b348 !important;
+        }
+
         /* Ensure all icons turn white on hover */
         .card-enhanced:hover .icon-container i {
             color: white !important;
@@ -277,6 +298,7 @@ $fotoPerfil = isset($_SESSION['foto_perfil']) ? $_SESSION['foto_perfil'] : '';
         .card-1 { animation-delay: 0.1s; }
         .card-2 { animation-delay: 0.2s; }
         .card-3 { animation-delay: 0.3s; }
+        .card-4 { animation-delay: 0.4s; }
     </style>
 </head>
 
@@ -302,10 +324,13 @@ $fotoPerfil = isset($_SESSION['foto_perfil']) ? $_SESSION['foto_perfil'] : '';
                 </div>
                 
                 <div class="flex items-center gap-4">
-                  
-                    <button onclick="logout()" class="btn-logout">
-                        <i class="fa-solid fa-arrow-left"></i>
-                        <span class="hidden sm:inline">Voltar</span>
+                    <button type="button" class="theme-toggle" data-theme-toggle aria-label="Ativar modo escuro" aria-pressed="false">
+                        <i class="fa-solid fa-sun" data-theme-icon="sun" aria-hidden="true"></i>
+                        <i class="fa-solid fa-moon" data-theme-icon="moon" aria-hidden="true"></i>
+                    </button>
+                    <button type="button" onclick="goToSubsystemCatalog()" class="back-button">
+                        <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+                        <span>Voltar</span>
                     </button>
                     </div>
             </div>
@@ -327,16 +352,16 @@ $fotoPerfil = isset($_SESSION['foto_perfil']) ? $_SESSION['foto_perfil'] : '';
                         </span>
                     </h1>
                     <p class="text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
-                        Plataforma completa para gerenciar usuários, setores e permissões do sistema CREDE com segurança e eficiência
+                        Plataforma completa para gerenciar usuários, perfis, tipos de usuário e permissões do sistema CREDE com segurança e eficiência
                     </p>
                 </div>
 
                
                 
                 <!-- Menu Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                     <!-- Usuários Card -->
-                    <a href="views/usuario.php" class="card-enhanced card-1 rounded-3xl p-8 group animate-fade-in">
+                    <a href="views/usuario.php" class="card-enhanced manager-menu-card card-1 rounded-3xl p-8 group animate-fade-in">
                         <div class="icon-container w-20 h-20 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 transition-all duration-500" 
                              style="--bg-from: rgba(0, 90, 36, 0.1); --bg-to: rgba(0, 90, 36, 0.05);">
                             <i class="fa-solid fa-user-plus text-3xl text-primary group-hover:text-white transition-colors duration-300"></i>
@@ -354,7 +379,7 @@ $fotoPerfil = isset($_SESSION['foto_perfil']) ? $_SESSION['foto_perfil'] : '';
                     </a>
 
                     <!-- Setores Card -->
-                    <a href="views/setor.php" class="card-enhanced card-2 rounded-3xl p-8 group animate-fade-in">
+                    <a href="views/setor.php" class="card-enhanced manager-menu-card card-2 rounded-3xl p-8 group animate-fade-in">
                         <div class="icon-container w-20 h-20 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 transition-all duration-500"
                              style="--bg-from: rgba(255, 165, 0, 0.1); --bg-to: rgba(255, 165, 0, 0.05);">
                             <i class="fa-solid fa-building text-3xl text-primary group-hover:text-white transition-colors duration-300"></i>
@@ -372,7 +397,7 @@ $fotoPerfil = isset($_SESSION['foto_perfil']) ? $_SESSION['foto_perfil'] : '';
                     </a>
 
                     <!-- Permissões Card -->
-                    <a href="views/permissoes.php" class="card-enhanced card-3 rounded-3xl p-8 group animate-fade-in md:col-span-2 lg:col-span-1">
+                    <a href="views/permissoes.php" class="card-enhanced manager-menu-card card-3 rounded-3xl p-8 group animate-fade-in">
                         <div class="icon-container w-20 h-20 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 transition-all duration-500"
                              style="--bg-from: rgba(59, 130, 246, 0.1); --bg-to: rgba(59, 130, 246, 0.05);">
                             <i class="fa-solid fa-shield-halved text-3xl text-primary group-hover:text-white transition-colors duration-300"></i>
@@ -382,6 +407,24 @@ $fotoPerfil = isset($_SESSION['foto_perfil']) ? $_SESSION['foto_perfil'] : '';
                         </h3>
                         <p class="text-gray-600 leading-relaxed mb-4">
                             Configure permissões detalhadas e controle de acesso para cada usuário do sistema
+                        </p>
+                        <div class="flex items-center text-primary font-semibold text-sm group-hover:translate-x-2 transition-transform">
+                            <span>Acessar módulo</span>
+                            <i class="fa-solid fa-arrow-right ml-2 group-hover:ml-3 transition-all"></i>
+                        </div>
+                    </a>
+
+                    <!-- Tipos de Usuário Card -->
+                    <a href="views/tipos_usuario.php" class="card-enhanced manager-menu-card card-4 rounded-3xl p-8 group animate-fade-in">
+                        <div class="icon-container w-20 h-20 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 transition-all duration-500"
+                             style="--bg-from: rgba(16, 185, 129, 0.12); --bg-to: rgba(0, 90, 36, 0.05);">
+                            <i class="fa-solid fa-user-tag text-3xl text-primary group-hover:text-white transition-colors duration-300"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-dark mb-3 font-heading group-hover:text-primary transition-colors">
+                            Tipos de Usuário
+                        </h3>
+                        <p class="text-gray-600 leading-relaxed mb-4">
+                            Crie tipos de acesso e vincule cada um ao sistema correspondente
                         </p>
                         <div class="flex items-center text-primary font-semibold text-sm group-hover:translate-x-2 transition-transform">
                             <span>Acessar módulo</span>
@@ -464,28 +507,39 @@ $fotoPerfil = isset($_SESSION['foto_perfil']) ? $_SESSION['foto_perfil'] : '';
         document.querySelectorAll('.card-enhanced').forEach(card => {
             card.addEventListener('mouseenter', function() {
                 this.style.transform = 'translateY(-8px) scale(1.02)';
-                
-                // Ensure text colors are maintained on hover for all cards
+
                 const title = this.querySelector('h3');
                 const description = this.querySelector('p');
-                const linkText = this.querySelector('.text-primary');
-                
-                if (title) title.style.color = '#005A24';
-                if (description) description.style.color = '#374151';
-                if (linkText) linkText.style.color = '#005A24';
+                const linkText = this.querySelector('div.flex.items-center.text-primary');
+                const isDark = document.documentElement.classList.contains('dark');
+                const hoverColor = isDark ? '#FFA500' : '#005A24';
+                const linkHoverColor = isDark ? '#00b348' : '#005A24';
+
+                if (title) title.style.color = hoverColor;
+                if (description) description.style.color = hoverColor;
+                if (linkText) {
+                    linkText.style.color = linkHoverColor;
+                    linkText.querySelectorAll('span, i').forEach(element => {
+                        element.style.color = linkHoverColor;
+                    });
+                }
             });
             
             card.addEventListener('mouseleave', function() {
                 this.style.transform = 'translateY(0) scale(1)';
-                
-                // Reset text colors for all cards
+
                 const title = this.querySelector('h3');
                 const description = this.querySelector('p');
-                const linkText = this.querySelector('.text-primary');
-                
+                const linkText = this.querySelector('div.flex.items-center.text-primary');
+
                 if (title) title.style.color = '';
                 if (description) description.style.color = '';
-                if (linkText) linkText.style.color = '';
+                if (linkText) {
+                    linkText.style.color = '';
+                    linkText.querySelectorAll('span, i').forEach(element => {
+                        element.style.color = '';
+                    });
+                }
             });
         });
 
@@ -493,7 +547,8 @@ $fotoPerfil = isset($_SESSION['foto_perfil']) ? $_SESSION['foto_perfil'] : '';
         const preloadLinks = [
             'views/usuario.php',
             'views/setor.php', 
-            'views/permissoes.php'
+            'views/permissoes.php',
+            'views/tipos_usuario.php'
         ];
         
         preloadLinks.forEach(link => {
@@ -504,9 +559,6 @@ $fotoPerfil = isset($_SESSION['foto_perfil']) ? $_SESSION['foto_perfil'] : '';
         });
 
       
-        function logout() {
-            window.location.href = '../../main/views/autenticacao/login.php?sair=true';
-        }
     </script>
 </body>
 

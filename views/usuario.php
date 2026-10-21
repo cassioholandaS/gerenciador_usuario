@@ -8,6 +8,7 @@ require_once(__DIR__ . "/../models/model.select.php");
 $select = new select();
 $usuarios = $select->listar_usuarios();
 $setores = $select->listar_setores();
+$sistemas = $select->listar_sistemas();
 $statusCadastro = '';
 foreach (['criado', 'editado', 'excluido', 'ja_existe', 'erro', 'falha', 'tipo_criado', 'tipo_ja_existe', 'tipo_erro', 'tipo_falha'] as $status) {
     if (isset($_GET[$status])) {
@@ -50,6 +51,8 @@ if (empty($_SESSION['notification_csrf_token'])) {
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="../assets/theme.css" rel="stylesheet">
+    <script src="../assets/theme.js" defer></script>
     <script>
         tailwind.config = {
             theme: {
@@ -207,6 +210,7 @@ if (empty($_SESSION['notification_csrf_token'])) {
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
+            isolation: isolate;
             width: 100%;
             height: fit-content;
             min-height: 280px;
@@ -216,16 +220,22 @@ if (empty($_SESSION['notification_csrf_token'])) {
         .card-enhanced::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(0, 90, 36, 0.05), transparent);
-            transition: left 0.6s ease;
+            inset: 0;
+            border-radius: inherit;
+            background: linear-gradient(105deg, transparent 25%, rgba(0, 90, 36, 0.08) 50%, transparent 75%);
+            transform: translateX(-100%);
+            transition: transform 0.6s ease;
+            pointer-events: none;
+            z-index: 0;
         }
 
         .card-enhanced:hover::before {
-            left: 100%;
+            transform: translateX(100%);
+        }
+
+        .user-card > * {
+            position: relative;
+            z-index: 1;
         }
 
         .card-enhanced:hover {
@@ -404,28 +414,9 @@ if (empty($_SESSION['notification_csrf_token'])) {
             transform: translateY(-1px);
         }
 
-        /* Status badge enhancements */
         .status-badge {
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
             font-weight: 600;
             letter-spacing: 0.025em;
-        }
-
-        .status-badge::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-            transition: left 0.5s;
-        }
-
-        .status-badge:hover::before {
-            left: 100%;
         }
 
         /* Botão de ação melhorado */
@@ -483,11 +474,8 @@ if (empty($_SESSION['notification_csrf_token'])) {
         <!-- Header -->
         <header class="header-glass sticky top-0 z-40 px-3 sm:px-6 py-3 sm:py-4 animate-slide-in">
             <div class="flex items-center justify-between max-w-7xl mx-auto">
-                <div class="flex items-center gap-2 sm:gap-4">
-                    <a href="../index.php" class="p-2 sm:p-3 rounded-xl hover:bg-gray-100 text-gray-600 transition-all group">
-                        <i class="fa-solid fa-arrow-left text-base sm:text-lg group-hover:scale-110 transition-transform"></i>
-                    </a>
-                    <div class="w-8 h-8 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center">
+            <div class="flex items-center gap-2 sm:gap-4">
+                <div class="w-8 h-8 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center">
                         <img class="w-6 h-6 sm:w-10 sm:h-10 object-contain" src="https://i.postimg.cc/Dy40VtFL/Design-sem-nome-13-removebg-preview.png" alt="Logo CREDE">
                     </div>
                     <div>
@@ -496,7 +484,16 @@ if (empty($_SESSION['notification_csrf_token'])) {
                     </div>
                 </div>
 
-                
+                <div class="flex items-center gap-2 sm:gap-3">
+                    <button type="button" class="theme-toggle" data-theme-toggle aria-label="Ativar modo escuro" aria-pressed="false">
+                        <i class="fa-solid fa-sun" data-theme-icon="sun" aria-hidden="true"></i>
+                        <i class="fa-solid fa-moon" data-theme-icon="moon" aria-hidden="true"></i>
+                    </button>
+                    <a href="../index.php" class="back-button">
+                        <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+                        <span>Voltar</span>
+                    </a>
+                </div>
             </div>
         </header>
 
@@ -741,6 +738,18 @@ if (empty($_SESSION['notification_csrf_token'])) {
                             Nome do Tipo *
                         </label>
                         <input id="inpNomeTipo" name="nome" type="text" class="input-enhanced w-full px-4 py-4 rounded-xl transition-all text-base border-2 focus:border-secondary focus:ring-4 focus:ring-secondary/10" placeholder="Digite o nome do tipo de usuário" required>
+                    </div>
+                    <div class="mt-5">
+                        <label for="inpSistemaTipo" class="block text-sm font-semibold text-dark mb-3 flex items-center gap-2">
+                            <i class="fa-solid fa-desktop text-primary"></i>
+                            Sistema vinculado *
+                        </label>
+                        <select id="inpSistemaTipo" name="sistema_id" class="input-enhanced w-full px-4 py-4 rounded-xl transition-all text-base border-2 focus:border-secondary focus:ring-4 focus:ring-secondary/10" required>
+                            <option value="">Selecione um sistema</option>
+                            <?php foreach (is_array($sistemas) ? $sistemas : [] as $sistema): ?>
+                                <option value="<?php echo (int) $sistema['id']; ?>"><?php echo htmlspecialchars($sistema['nome'], ENT_QUOTES, 'UTF-8'); ?></option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
                     <div class="p-6 sm:p-8 border-t border-gray-100 bg-gray-50/50 flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3">
                         <button type="button" class="px-6 py-3 rounded-xl border-2 border-gray-300 font-semibold text-gray-700 hover:bg-gray-100 hover:border-gray-400 transition-all text-base" onclick="closeModal('modalTipoUsuario')">

@@ -8,11 +8,11 @@ require_once(__DIR__ . '/../config/connect.php');
 
 class admin extends gerenciar_usuarios_connect
 {
-    private string $table1;
-    private string $table2;
-    private string $table3;
-    private string $table4;
-    private string $table5;
+    private $table1;
+    private $table2;
+    private $table3;
+    private $table4;
+    private $table5;
 
     function __construct()
     {
@@ -131,20 +131,38 @@ class admin extends gerenciar_usuarios_connect
         }
     }
 
-    public function criar_tipo_usuario($nome)
+    public function criar_tipo_usuario($nome, int $id_sistema)
     {
         try {
-            // Verificar se o tipo já existe
-            $stmt_check = $this->connect->prepare("SELECT id FROM {$this->table3} WHERE tipo = :tipo");
+            $nome = trim((string) $nome);
+            $nomeLength = function_exists('mb_strlen') ? mb_strlen($nome, 'UTF-8') : strlen($nome);
+            if ($nome === '' || $nomeLength > 100 || $id_sistema <= 0) {
+                return 2;
+            }
+
+            $stmt_sistema = $this->connect->prepare("SELECT id FROM {$this->table5} WHERE id = :id");
+            $stmt_sistema->bindValue(":id", $id_sistema, PDO::PARAM_INT);
+            $stmt_sistema->execute();
+            if (!$stmt_sistema->fetch(PDO::FETCH_ASSOC)) {
+                return 2;
+            }
+
+            $stmt_check = $this->connect->prepare(
+                "SELECT id FROM {$this->table3} WHERE tipo = :tipo AND id_sistema = :id_sistema"
+            );
             $stmt_check->bindValue(":tipo", trim($nome));
+            $stmt_check->bindValue(":id_sistema", $id_sistema, PDO::PARAM_INT);
             $stmt_check->execute();
 
             if ($stmt_check->rowCount() > 0) {
                 return 3;
             }
 
-            $stmt = $this->connect->prepare("INSERT INTO {$this->table3} (tipo) VALUES (:tipo)");
-            $stmt->bindValue(":tipo", trim($nome));
+            $stmt = $this->connect->prepare(
+                "INSERT INTO {$this->table3} (tipo, id_sistema) VALUES (:tipo, :id_sistema)"
+            );
+            $stmt->bindValue(":tipo", $nome);
+            $stmt->bindValue(":id_sistema", $id_sistema, PDO::PARAM_INT);
 
             if ($stmt->execute()) {
                 return 1;
@@ -416,6 +434,15 @@ class admin extends gerenciar_usuarios_connect
     public function adicionar_permissao(int $id_usuario, int $id_tipo_usuario, int $id_sistema)
     {
         try {
+            $stmt_tipo = $this->connect->prepare(
+                "SELECT id FROM {$this->table3} WHERE id = :id_tipo AND id_sistema = :id_sistema"
+            );
+            $stmt_tipo->bindValue(":id_tipo", $id_tipo_usuario);
+            $stmt_tipo->bindValue(":id_sistema", $id_sistema);
+            $stmt_tipo->execute();
+            if (!$stmt_tipo->fetch(PDO::FETCH_ASSOC)) {
+                return 2;
+            }
 
             // Verificar se a permissão já existe
             $stmt_check = $this->connect->prepare("SELECT id FROM {$this->table4} WHERE id_usuarios = :id_usuario AND id_tipos_usuarios = :id_tipo_usuario AND id_sistemas = :id_sistema");
@@ -450,6 +477,15 @@ class admin extends gerenciar_usuarios_connect
     public function editar_permissao($id, $id_usuario, $id_tipo_usuario, $id_sistema)
     {
         try {
+            $stmt_tipo = $this->connect->prepare(
+                "SELECT id FROM {$this->table3} WHERE id = :id_tipo AND id_sistema = :id_sistema"
+            );
+            $stmt_tipo->bindValue(":id_tipo", $id_tipo_usuario);
+            $stmt_tipo->bindValue(":id_sistema", $id_sistema);
+            $stmt_tipo->execute();
+            if (!$stmt_tipo->fetch(PDO::FETCH_ASSOC)) {
+                return 2;
+            }
 
             // Verificar se a nova combinação já existe em outra permissão
             $stmt_check = $this->connect->prepare("SELECT id FROM {$this->table4} WHERE id_usuarios = :id_usuario AND id_tipos_usuarios = :id_tipo_usuario AND id_sistemas = :id_sistema AND id != :id");

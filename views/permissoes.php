@@ -36,6 +36,8 @@ $fotoPerfil = isset($_SESSION['foto_perfil']) ? $_SESSION['foto_perfil'] : '';
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="../assets/theme.css" rel="stylesheet">
+    <script src="../assets/theme.js" defer></script>
     <script>
         tailwind.config = {
             theme: {
@@ -162,6 +164,9 @@ $fotoPerfil = isset($_SESSION['foto_perfil']) ? $_SESSION['foto_perfil'] : '';
         .card-enhanced:hover::before {
             left: 100%;
         }
+        .permissions-panel::before {
+            display: none;
+        }
         .card-enhanced:hover {
             box-shadow: 0 25px 80px -15px rgba(0, 0, 0, 0.15), 0 10px 30px -5px rgba(0, 0, 0, 0.1);
             border-color: rgba(255, 165, 0, 0.3);
@@ -241,10 +246,7 @@ $fotoPerfil = isset($_SESSION['foto_perfil']) ? $_SESSION['foto_perfil'] : '';
         <header class="header-glass sticky top-0 z-40 px-3 sm:px-6 py-3 sm:py-4 animate-slide-in">
             <div class="flex items-center justify-between max-w-7xl mx-auto">
                 <div class="flex items-center gap-2 sm:gap-4">
-                    <a href="../index.php" class="p-2 sm:p-3 rounded-xl hover:bg-gray-100 text-gray-600 transition-all group">
-                        <i class="fa-solid fa-arrow-left text-base sm:text-lg group-hover:scale-110 transition-transform"></i>
-                    </a>
-                    <div class="w-8 h-8 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center">
+                <div class="w-8 h-8 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center">
                         <img class="w-6 h-6 sm:w-10 sm:h-10 object-contain" src="https://i.postimg.cc/Dy40VtFL/Design-sem-nome-13-removebg-preview.png" alt="Logo CREDE">
                     </div>
                     <div>
@@ -252,13 +254,23 @@ $fotoPerfil = isset($_SESSION['foto_perfil']) ? $_SESSION['foto_perfil'] : '';
                         <p class="text-xs text-gray-500 font-medium hidden sm:block">Gerenciamento de Permissões</p>
                     </div>
                 </div>
+                <div class="flex items-center gap-2 sm:gap-3">
+                    <button type="button" class="theme-toggle" data-theme-toggle aria-label="Ativar modo escuro" aria-pressed="false">
+                        <i class="fa-solid fa-sun" data-theme-icon="sun" aria-hidden="true"></i>
+                        <i class="fa-solid fa-moon" data-theme-icon="moon" aria-hidden="true"></i>
+                    </button>
+                    <a href="../index.php" class="back-button">
+                        <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+                        <span>Voltar</span>
+                    </a>
+                </div>
             </div>
         </header>
         <!-- Main Content -->
         <main class="px-4 sm:px-8 lg:px-12 py-6 sm:py-10 flex-1">
             <div class="min-h-full w-full max-w-none">
                 <!-- Permissions Management Panel -->
-                <div class="card-enhanced rounded-2xl overflow-hidden animate-slide-up">
+                <div class="card-enhanced permissions-panel rounded-2xl overflow-hidden animate-slide-up">
                     <div class="p-8 sm:p-10">
                         <div class="grid grid-cols-1 xl:grid-cols-5 gap-8 sm:gap-10">
                             <!-- Lista de Usuários -->
@@ -410,7 +422,7 @@ $fotoPerfil = isset($_SESSION['foto_perfil']) ? $_SESSION['foto_perfil'] : '';
                                 <option value="">Selecione um sistema</option>
                                 <?php 
                                 $dados = $select->listar_sistemas();
-                                foreach ($dados as $dado) {
+                                foreach (is_array($dados) ? $dados : [] as $dado) {
                                 ?>
                                 <option value="<?php echo $dado['id']; ?>"><?php echo htmlspecialchars($dado['nome']); ?></option>
                                 <?php } ?>
@@ -469,7 +481,7 @@ $fotoPerfil = isset($_SESSION['foto_perfil']) ? $_SESSION['foto_perfil'] : '';
                                 <option value="">Selecione um sistema</option>
                                 <?php 
                                 $dados = $select->listar_sistemas();
-                                foreach ($dados as $dado) {
+                                foreach (is_array($dados) ? $dados : [] as $dado) {
                                 ?>
                                 <option value="<?php echo $dado['id']; ?>"><?php echo htmlspecialchars($dado['nome']); ?></option>
                                 <?php } ?>

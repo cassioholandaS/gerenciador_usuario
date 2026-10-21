@@ -2,13 +2,17 @@
 require_once(__DIR__ . "/../models/model.admin.php");
 
 if (
-    isset($_POST["nome"]) && !empty(trim($_POST["nome"]))
+    isset($_POST["nome"], $_POST["sistema_id"])
+    && is_string($_POST["nome"])
+    && trim($_POST["nome"]) !== ''
+    && filter_var($_POST["sistema_id"], FILTER_VALIDATE_INT)
     && (!isset($_POST["cpf"]) || empty(trim((string)$_POST["cpf"])))
 ) {
     $nome = trim($_POST["nome"]);
+    $id_sistema = (int) $_POST["sistema_id"];
 
     $admin_model = new admin();
-    $result = $admin_model->criar_tipo_usuario($nome);
+    $result = $admin_model->criar_tipo_usuario($nome, $id_sistema);
 
     switch ($result) {
         case 1:
@@ -24,6 +28,12 @@ if (
             header('Location: ../views/usuario.php?tipo_falha');
             exit();
     }
+} else if (
+    isset($_POST["nome"]) && is_string($_POST["nome"]) && trim($_POST["nome"]) !== ''
+    && (!isset($_POST["cpf"]) || empty(trim((string)$_POST["cpf"])))
+) {
+    header('Location: ../views/usuario.php?tipo_erro');
+    exit();
 } else if (
     isset($_POST["user_id"]) && !empty($_POST["user_id"])
     && (!isset($_POST["cpf"]) || empty(trim((string)$_POST["cpf"])))

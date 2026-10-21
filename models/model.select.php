@@ -7,11 +7,11 @@ $session->tempo_session();
 require_once(__DIR__ . '/../config/connect.php');
 class select extends gerenciar_usuarios_connect
 {
-    private string $table1;
-    private string $table2;
-    private string $table3;
-    private string $table4;
-    private string $table5;
+    private $table1;
+    private $table2;
+    private $table3;
+    private $table4;
+    private $table5;
 
     function __construct()
     {
@@ -81,7 +81,24 @@ class select extends gerenciar_usuarios_connect
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
             error_log("Erro ao listar sistemas: " . $e->getMessage());
-            return 0;
+            return false;
+        }
+    }
+
+    public function listar_tipos_usuarios_com_sistemas()
+    {
+        try {
+            $stmt = $this->connect->prepare("
+                SELECT t.id, t.tipo, t.id_sistema, s.nome AS nome_sistema
+                FROM {$this->table3} t
+                LEFT JOIN {$this->table5} s ON s.id = t.id_sistema
+                ORDER BY s.nome, t.tipo
+            ");
+            $stmt->execute();
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (Exception $e) {
+            error_log("Erro ao listar tipos de usuários com sistemas: " . $e->getMessage());
+            return false;
         }
     }
         /**
@@ -193,7 +210,7 @@ class select extends gerenciar_usuarios_connect
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (Exception $e) {
             error_log("Erro ao listar tipos de usuários: " . $e->getMessage());
-            return 0;
+            return [];
         }
     }
 
