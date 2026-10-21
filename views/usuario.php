@@ -675,12 +675,12 @@ if (empty($_SESSION['notification_csrf_token'])) {
                             </label>
                             <input id="inpEmail" name="email" type="email" class="input-enhanced w-full px-4 py-4 rounded-xl transition-all text-base border-2 focus:border-primary focus:ring-4 focus:ring-primary/10" placeholder="Digite o e-mail" required>
                         </div>
-                        <div>
+                        <div id="userPasswordField" class="hidden">
                             <label class="block text-sm font-semibold text-dark mb-3 flex items-center gap-2">
                                 <i class="fa-solid fa-lock text-primary"></i>
-                                Senha *
+                                Nova senha (opcional)
                             </label>
-                            <input id="inpSenha" name="senha" type="password" minlength="6" autocomplete="new-password" class="input-enhanced w-full px-4 py-4 rounded-xl transition-all text-base border-2 focus:border-primary focus:ring-4 focus:ring-primary/10" placeholder="Digite a senha" required>
+                            <input id="inpSenha" name="senha" type="password" minlength="6" autocomplete="new-password" class="input-enhanced w-full px-4 py-4 rounded-xl transition-all text-base border-2 focus:border-primary focus:ring-4 focus:ring-primary/10" placeholder="Digite a nova senha">
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-dark mb-3 flex items-center gap-2">
@@ -994,7 +994,7 @@ if (empty($_SESSION['notification_csrf_token'])) {
             document.getElementById('inpNome').value = '';
             document.getElementById('inpEmail').value = '';
             document.getElementById('inpSenha').value = '';
-            document.getElementById('inpSenha').required = true;
+            document.getElementById('userPasswordField').classList.add('hidden');
             document.getElementById('inpCpf').value = '';
             document.getElementById('inpSetor').value = '';
             document.getElementById('userForm').action = '../controllers/controller_usuario.php';
@@ -1014,7 +1014,7 @@ if (empty($_SESSION['notification_csrf_token'])) {
                 document.getElementById('inpNome').value = user.nome || '';
                 document.getElementById('inpEmail').value = user.email || '';
                 document.getElementById('inpSenha').value = '';
-                document.getElementById('inpSenha').required = false;
+                document.getElementById('userPasswordField').classList.remove('hidden');
                 
                 // Aplicar máscara ao CPF se existir
                 if (user.cpf) {
@@ -1166,13 +1166,7 @@ if (empty($_SESSION['notification_csrf_token'])) {
                 }
 
                 const senhaInformada = this.inpSenha.value.trim();
-                if (!this.inpUserId.value && !senhaInformada) {
-                    e.preventDefault();
-                    showNotification('Para criar um usuário, informe uma senha.', 'error');
-                    return;
-                }
-
-                if (senhaInformada && senhaInformada.length < 6) {
+                if (this.inpUserId.value && senhaInformada && senhaInformada.length < 6) {
                     e.preventDefault();
                     showNotification('A senha deve ter pelo menos 6 caracteres.', 'error');
                     return;

@@ -52,17 +52,14 @@ if (
     isset($_POST["nome"]) && !empty(trim($_POST["nome"])) &&
     isset($_POST["email"]) && !empty(trim($_POST["email"])) &&
     isset($_POST["cpf"]) && !empty(trim((string)$_POST["cpf"])) &&
-    isset($_POST["setor"]) && !empty($_POST["setor"]) &&
-    isset($_POST["senha"]) && !empty($_POST["senha"])
+    isset($_POST["setor"]) && !empty($_POST["setor"])
 ) {
     $nome = trim($_POST["nome"]);
     $email = trim($_POST["email"]);
     $cpf = trim((string)$_POST["cpf"]);
     $id_setor = $_POST["setor"];
-    $senha = (string)$_POST["senha"];
-
     $admin_model = new admin();
-    $result = $admin_model->criar_usuario($nome, $email, $cpf, $id_setor, $senha);
+    $result = $admin_model->criar_usuario($nome, $email, $cpf, $id_setor);
 
     switch ($result) {
         case 1:

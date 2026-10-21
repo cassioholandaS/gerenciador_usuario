@@ -245,20 +245,18 @@ class admin extends gerenciar_usuarios_connect
     /**
      * Criar novo usuário
      */
-    public function criar_usuario($nome, $email, $cpf, $id_setor, $senha = null)
+    public function criar_usuario($nome, $email, $cpf, $id_setor)
     {
         try {
             $nome = trim((string) $nome);
             $email = trim((string) $email);
             $cpf = $this->normalizarCpf($cpf);
-            $senha = trim((string) ($senha ?? ''));
             $id_setor = filter_var($id_setor, FILTER_VALIDATE_INT);
 
             if (
                 $nome === ''
                 || filter_var($email, FILTER_VALIDATE_EMAIL) === false
                 || $cpf === ''
-                || strlen($senha) < 6
                 || $id_setor === false
             ) {
                 return 2;
@@ -270,8 +268,6 @@ class admin extends gerenciar_usuarios_connect
             if (!$stmt_check->fetch(PDO::FETCH_ASSOC)) {
                 return 2;
             }
-
-            $senhaHash = password_hash($senha, PASSWORD_DEFAULT);
 
             // Verificar se o email já existe
             $stmt_check = $this->connect->prepare("SELECT id FROM {$this->table1} WHERE email = :email");
@@ -291,11 +287,10 @@ class admin extends gerenciar_usuarios_connect
                 return 3;
             }
 
-            $stmt = $this->connect->prepare("INSERT INTO {$this->table1} (nome, email, cpf, senha, id_setor) VALUES (:nome, :email, :cpf, :senha, :id_setor)");
+            $stmt = $this->connect->prepare("INSERT INTO {$this->table1} (nome, email, cpf, id_setor) VALUES (:nome, :email, :cpf, :id_setor)");
             $stmt->bindValue(":nome", $nome);
             $stmt->bindValue(":email", $email);
             $stmt->bindValue(":cpf", $cpf);
-            $stmt->bindValue(":senha", $senhaHash);
             $stmt->bindValue(":id_setor", $id_setor);
 
             if ($stmt->execute()) {
