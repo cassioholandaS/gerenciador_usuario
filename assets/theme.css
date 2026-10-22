@@ -26,6 +26,10 @@ html.dark [class~="bg-gradient-to-r"][class*="from-gray-50"] {
     background-image: none !important;
 }
 
+html.dark .modal-actions-footer {
+    background: transparent !important;
+}
+
 html.dark [class~="text-dark"],
 html.dark [class~="text-gray-800"],
 html.dark [class~="text-gray-700"] {

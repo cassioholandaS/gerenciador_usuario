@@ -34,13 +34,12 @@ class model_solicitacoes_primeiro_acesso
                      LIMIT 1"
                 );
                 $pending->execute(['user_id' => $user['id']]);
-                if ($pending->fetchColumn()) {
-                    return null;
-                }
+                $hasPendingRequest = (bool)$pending->fetchColumn();
 
                 return [
                     'id' => (int)$user['id'],
                     'email' => trim((string)$user['email']),
+                    'pendente' => $hasPendingRequest,
                 ];
             }
         }

@@ -575,7 +575,7 @@ $fotoPerfil = isset($_SESSION['foto_perfil']) ? $_SESSION['foto_perfil'] : '';
                             <input id="inpNomeSetor" name="nome" type="text" class="input-enhanced w-full px-3 sm:px-4 py-3 sm:py-4 rounded-lg sm:rounded-xl transition-all text-sm sm:text-base border-2 focus:border-secondary focus:ring-4 focus:ring-secondary/10" placeholder="Digite o nome do setor" required>
                         </div>
                     </div>
-                    <div class="mt-4 sm:mt-6 border-t border-gray-100 bg-gray-50/50 flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-4 sm:pt-6">
+                    <div class="modal-actions-footer mt-4 sm:mt-6 border-t border-gray-100 bg-gray-50/50 flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-4 sm:pt-6">
                         <button type="button" class="px-4 sm:px-6 py-3 rounded-lg sm:rounded-xl border-2 border-gray-300 font-semibold text-gray-700 hover:bg-gray-100 hover:border-gray-400 transition-all text-sm sm:text-base order-2 sm:order-1" onclick="closeModal('modalSetor')">
                             <i class="fa-solid fa-times mr-2"></i>Cancelar
                         </button>
